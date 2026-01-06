@@ -63,7 +63,7 @@ async function callLLM(prompt, taskType) {
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3000',
+        'HTTP-Referer':  process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000',
         'X-Title': 'Feedback AI System'
       },
       body: JSON.stringify({
