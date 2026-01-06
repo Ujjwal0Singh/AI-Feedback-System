@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Feedback Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .container { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+        .rating { margin: 20px 0; }
+        .star { font-size: 30px; cursor: pointer; color: #ccc; margin: 0 5px; }
+        .star.selected { color: gold; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; padding: 10px; }
+        button { background: #0070f3; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+        .success { color: green; margin-top: 15px; }
+        .error { color: red; margin-top: 15px; }
+        .ai-response { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Share Your Feedback</h1>
+        <p class="instructions">Rate your experience and share your thoughts</p>
+        
+        <div class="rating-section">
+            <h3>How would you rate your experience?</h3>
+            <div class="rating">
+            <span class="star" data-rating="1">☆</span>
+            <span class="star" data-rating="2">☆</span>
+            <span class="star" data-rating="3">☆</span>
+            <span class="star" data-rating="4">☆</span>
+            <span class="star" data-rating="5">☆</span>
+            </div>
+        </div>
+        
+        <textarea id="review" placeholder="Write your review here..."></textarea>
+        
+        <button onclick="submitFeedback()">Submit Feedback</button>
+        
+        <div id="message"></div>
+        <div id="aiResponse" class="ai-response" style="display: none;"></div>
+    </div>
+
+    <script>
+        let selectedRating = 0;
+        
+        // Star rating selection
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.rating);
+                document.querySelectorAll('.star').forEach(s => {
+                    s.classList.toggle('selected', 
+                        parseInt(s.dataset.rating) <= selectedRating);
+                });
+            });
+        });
+        
+        async function submitFeedback() {
+            const review = document.getElementById('review').value;
+            
+            if (selectedRating === 0) {
+                showMessage('Please select a rating', 'error');
+                return;
+            }
+            
+            showMessage('Submitting...', '');
+            
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating: selectedRating, review })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Thank you for your feedback!', 'success');
+                    
+                    // Show AI response
+                    const aiDiv = document.getElementById('aiResponse');
+                    aiDiv.style.display = 'block';
+                    aiDiv.innerHTML = `<strong>AI Response:</strong><br>${data.aiResponse}`;
+                    
+                    // Reset form
+                    document.getElementById('review').value = '';
+                    document.querySelectorAll('.star').forEach(s => 
+                        s.classList.remove('selected'));
+                    selectedRating = 0;
+                } else {
+                    showMessage('Submission failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = text;
+            messageDiv.className = type;
+        }
+    </script>
+</body>
+</html>
