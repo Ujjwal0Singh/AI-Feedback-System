@@ -57,41 +57,47 @@ async function callLLM(prompt, taskType) {
               suggest 1-2 specific, actionable recommendations. Be practical and brief.`
   };
   
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer':  process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000',
-        'X-Title': 'Feedback AI System'
-      },
-      body: JSON.stringify({
-        model: 'mistralai/devstral-2512:free',
-        messages: [{ role: 'user', content: prompts[taskType] }],
-        max_tokens: 150,
-        temperature: 0.7
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API response: ${response.status}`);
+  // Try different free models
+    const models = [
+    'mistralai/mistral-7b-instruct:free',
+    'google/gemma-7b-it:free',
+    'qwen/qwen-2.5-7b-instruct:free',
+    'huggingfaceh4/zephyr-7b-beta:free'
+    ];
+
+    // Use the first working model
+    for (let model of models) {
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{ role: 'user', content: prompts[taskType] }],
+                max_tokens: 150
+            })
+            });
+            
+            if (!response.ok) {
+            throw new Error(`API response: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const result = data.choices?.[0]?.message?.content?.trim();
+            
+            if (!result || result.length < 5) {
+            throw new Error('Empty AI response');
+            }
+            
+            console.log(`AI ${taskType} generated:`, result.substring(0, 100));
+                return result;
+        } catch (error) {
+            console.log(`Model ${model} failed: ${error.message}`);
+        }
     }
-    
-    const data = await response.json();
-    const result = data.choices?.[0]?.message?.content?.trim();
-    
-    if (!result || result.length < 5) {
-      throw new Error('Empty AI response');
-    }
-    
-    console.log(`AI ${taskType} generated:`, result.substring(0, 100));
-    return result;
-    
-  } catch (error) {
-    console.log(`Using fallback for ${taskType}:`, error.message);
-    return fallbacks[taskType];
-  }
 }
 
 // API: Submit feedback with parallel AI processing
