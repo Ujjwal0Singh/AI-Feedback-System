@@ -61,7 +61,7 @@ async function callLLM(prompt, taskType) {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Authorization': 'Bearer sk-or-v1-40f2462b5c72064cf1c8675f3c40485d8b8283d3a68bab',
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000',
         'X-Title': 'Feedback AI System'
