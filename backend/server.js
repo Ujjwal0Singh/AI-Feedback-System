@@ -63,7 +63,7 @@ async function callLLM(prompt, taskType) {
       headers: {
         'Authorization': 'Bearer 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',
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000',
+        'HTTP-Referer': 'https://ai-feedback-system-oceq.onrender.com/',
         'X-Title': 'Feedback AI System'
       },
       body: JSON.stringify({
